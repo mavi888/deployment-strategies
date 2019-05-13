@@ -1,0 +1,43 @@
+service: deployment-strategies 
+
+plugins:
+  - serverless-plugin-canary-deployments
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - codedeploy:*
+      Resource:
+        - "*"
+
+functions:
+  canary:
+    handler: handler.canary
+    events:
+      - http:
+          method: get
+          path: canary
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: Live
+      preTrafficHook: preHook
+      postTrafficHook: postHook
+  linear:
+    handler: handler.linear
+    events:
+      - http:
+          method: get
+          path: linear
+    deploymentSettings:
+      type: Linear10PercentEvery1Minute
+      alias: Live
+      preTrafficHook: preHook
+      postTrafficHook: postHook
+  preHook:
+    handler: hooks.preHook
+  postHook:
+    handler: hooks.postHook
